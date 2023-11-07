@@ -64,14 +64,10 @@ namespace App_Xamarin_Firebase.Controllers
             return Ok(recipes);
         }
 
-        [HttpGet("searchByUserId")]
-        public async Task<ActionResult<List<Recipe>>> SearchRecipesByUserId([FromQuery] string uidUser)
+        [HttpGet("searchByUserId/{id}")]
+        public async Task<ActionResult<List<Recipe>>> SearchRecipesById([FromQuery] string id)
         {
-            var recipes = await recipeService.SearchRecipesByUserId(uidUser);
-            if (recipes.Count == 0)
-            {
-                return NotFound();
-            }
+            var recipes = await recipeService.GetRecipeById(id);
             return Ok(recipes);
         }
 

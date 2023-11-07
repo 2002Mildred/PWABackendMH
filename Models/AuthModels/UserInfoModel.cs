@@ -10,5 +10,6 @@ namespace App_Xamarin_Firebase.Models.AuthModels
         public string Username { get; set; }
         public string Gender { get; set; }
         public DateTime Birthday { get; set; }
+        public double? IMC { get; set; }
     }
 }

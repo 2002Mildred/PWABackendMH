@@ -15,5 +15,6 @@ namespace App_Xamarin_Firebase.Models.AuthModels
         public string Gender { get; set; }
         [Required(ErrorMessage = "El campo Birthday es requerido.")]
         public DateTime Birthday { get; set; }
+
     }
 }

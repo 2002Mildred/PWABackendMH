@@ -207,5 +207,40 @@ namespace App_Xamarin_Firebase.Controllers
             }
         }
 
+
+
+        [HttpPost("add-imc")]
+        public async Task<IActionResult> AddIMCToUser([FromBody] IMCModel model)
+        {
+            try
+            {
+                // Verificar que el usuario exista en Firebase
+                FirebaseResponse userInfoResponse = await cliente.GetAsync($"userInfo/{model.UserId}");
+
+                if (userInfoResponse != null && userInfoResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    UserInfoModel userInfo = userInfoResponse.ResultAs<UserInfoModel>();
+
+                    // Actualizar el IMC en la información del usuario
+                    userInfo.IMC = model.IMC;
+
+            
+                    SetResponse response = cliente.Set($"userInfo/{ model.UserId}", userInfo);
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        return Ok("IMC agregado con éxito");
+                    }
+                }
+
+                return NotFound("Usuario no encontrado");
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError, errorMessage);
+            }
+        }
+
     }
 }

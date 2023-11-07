@@ -6,6 +6,7 @@ using FireSharp.Config;
 using App_Xamarin_Firebase.Models;
 using System.Linq;
 using System;
+using FireSharp.Response;
 
 namespace App_Xamarin_Firebase.Services
 {
@@ -13,7 +14,7 @@ namespace App_Xamarin_Firebase.Services
     {
         private readonly FirebaseClient client;
 
-        public RecipeService()
+        public  RecipeService()
         {
             IFirebaseConfig config = new FirebaseConfig
             {
@@ -30,7 +31,7 @@ namespace App_Xamarin_Firebase.Services
 
             return recipes.Select(r => new Recipe
             {
-                Id = r.Key,
+                id= r.Key,
                 Name = r.Value.Name,
                 Ingredients = r.Value.Ingredients,
                 Category = r.Value.Category,
@@ -46,17 +47,34 @@ namespace App_Xamarin_Firebase.Services
             var recipeId = Guid.NewGuid().ToString("N");
             await client.SetAsync($"recipes/{recipeId}", recipe);
 
-            recipe.Id = recipeId;
+            recipe.id = recipeId;
             return recipe;
         }
+
+
 
         public async Task<List<Recipe>> GetRecipesByCategory(string category)
         {
             var response = await client.GetAsync("recipes");
             var recipes = response.ResultAs<Dictionary<string, Recipe>>();
 
-            return recipes.Values.Where(r => r.Category == category).ToList();
+            var recipesWithKeys = recipes.Where(kv => kv.Value.Category == category)
+                                         .Select(kv => new Recipe
+                                         {
+                                             id = kv.Key,
+                                             Name = kv.Value.Name,
+                                             time = kv.Value.time,
+                                             Image = kv.Value.Image,
+                                             Ingredients = kv.Value.Ingredients,
+                                             Category = kv.Value.Category,
+                                             PreparationSteps = kv.Value.PreparationSteps,
+                                             UidUser = kv.Value.UidUser
+                                         })
+                                         .ToList();
+
+            return recipesWithKeys;
         }
+
 
         public async Task<List<Recipe>> GetRecipesByIngredients(List<string> ingredients)
         {
@@ -76,14 +94,34 @@ namespace App_Xamarin_Firebase.Services
             return matchingRecipes;
         }
 
-        public async Task<List<Recipe>> SearchRecipesByUserId(string uidUser)
+        public async Task<Recipe> GetRecipeById(string id)
         {
-            var response = await client.GetAsync("recipes");
-            var recipes = response.ResultAs<Dictionary<string, Recipe>>();
+            try
+            {
+                FirebaseResponse response = await client.GetAsync($"recipes/{id}");
 
-            var matchingRecipes = recipes.Values.Where(r => r.UidUser == uidUser).ToList();
-            return matchingRecipes;
-        }
+                if (response.Body != "null")
+                {
+                    var recipes = response.ResultAs<Dictionary<string, Recipe>>();
+
+                    var matchingRecipes = recipes.Values.ToList();
+                    return matchingRecipes.FirstOrDefault();
+
+
+
+                }
+               
+                    // Handle the case where the recipe with the provided ID doesn't exist.
+                    return null;
+                
+            }
+            catch (Exception ex)
+            {
+                // Handle any potential exceptions here.
+                Console.WriteLine("Error: " + ex.Message);
+                return null;
+            }
+    }
 
 
     }
